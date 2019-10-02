@@ -5,9 +5,10 @@
 * what happens when simultaneous crank & wheel event?
 
 ## Improvements
-* test inertial sensor imu
 * incorporate setEventhandler BLE
 * led builtin not functioning?
+* add SwitchService and characteristic for lights
+* test inertial sensor imu for alarm
 
 # Android
 * check existing BLE CSC apps (cateye)

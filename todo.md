@@ -1,10 +1,14 @@
+### Arduino
+# Investigate
 read supply voltage possible? V_in
 is there a way to disable WIFI in software?
-test inertial sensor imu
 what happens when simultaneous crank & wheel event?
 
-web app for android
-
+# Improvements
+test inertial sensor imu
 incorporate setEventhandler BLE
+led builtin not functioning?
 
-led builtin werkt niet?
+### Android
+check existing BLE CSC apps (cateye)
+web app for android

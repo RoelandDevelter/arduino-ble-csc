@@ -1,0 +1,10 @@
+read supply voltage possible? V_in
+is there a way to disable WIFI in software?
+test inertial sensor imu
+what happens when simultaneous crank & wheel event?
+
+web app for android
+
+incorporate setEventhandler BLE
+
+led builtin werkt niet?

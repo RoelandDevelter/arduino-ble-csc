@@ -1,14 +1,15 @@
 # Arduino
+## to do
+* add actual switch commands
+
 ## Investigate
-* read supply voltage possible? V_in
+* read supply voltage possible
 * is there a way to disable WIFI in software?
-* what happens when simultaneous crank & wheel event?
+* use byte characteristic: each light one bit so multiple switching is possible
 
 ## Improvements
-* incorporate setEventhandler BLE
-* led builtin not functioning?
-* add SwitchService and characteristic for lights
-* test inertial sensor imu for alarm
+* use IMU for alarm
+* use IMU for brake lights
 
 # Android
 * check existing BLE CSC apps (cateye)

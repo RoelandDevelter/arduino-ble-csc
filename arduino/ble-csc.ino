@@ -91,7 +91,6 @@ void setup() {
   switchCharacteristicRear.setEventHandler(BLEWritten, switchedRear);
   switchCharacteristicEL.setEventHandler(BLEWritten, switchedEL);
 
-
   BLE.addService(cscService);
   BLE.addService(battService);
   BLE.addService(lightSwitchService);
@@ -107,7 +106,6 @@ void setup() {
   switchCharacteristicFront.writeValue(LOW);
   switchCharacteristicRear.writeValue(LOW);
   switchCharacteristicEL.writeValue(LOW);
-
     
   BLE.setAdvertisedService(cscService); // add the service UUID
   BLE.advertise();
@@ -179,7 +177,6 @@ void bleConnectHandler(BLEDevice central){
 }
 
 void switchedFront(BLEDevice central, BLECharacteristic characteristic){
-
   if (switchCharacteristicFront.value()) {
     Serial.println("Front light on");
     //todo
@@ -189,7 +186,6 @@ void switchedFront(BLEDevice central, BLECharacteristic characteristic){
 }
 
 void switchedRear(BLEDevice central, BLECharacteristic characteristic){
-
   if (switchCharacteristicRear.value()) {
     Serial.println("Rear light on");
   } else {
@@ -198,7 +194,6 @@ void switchedRear(BLEDevice central, BLECharacteristic characteristic){
 }
 
 void switchedEL(BLEDevice central, BLECharacteristic characteristic){
-
   if (switchCharacteristicEL.value()) {
     Serial.println("EL tape on");
   } else {

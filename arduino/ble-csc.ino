@@ -5,7 +5,7 @@ const int pin_speed = 2;
 const int pin_cad = 3;
 const int pin_batt = A0;
 
-#pragma pack(1)   // packs everything closer to each other, required to get 
+#pragma pack(1)   // packs everything closer to each other (= get rid of padding), required for proper readout
 // define csc measurement packet
 typedef struct sensorData_t{
   byte flags;
@@ -55,14 +55,15 @@ BLEBoolCharacteristic switchCharacteristicEL("d469b383-4137-42b7-b977-16c8e1b383
 BLEDescriptor descriptorEL("2901", "ELTape");
 
 void setup() {
+  // set up pins
   pinMode(pin_batt, INPUT);
   pinMode(pin_speed, INPUT_PULLUP);
   pinMode(pin_cad, INPUT_PULLUP);
   pinMode(LED_BUILTIN, OUTPUT);
-  
   attachInterrupt(digitalPinToInterrupt(pin_speed), updateSpeed, FALLING); // use pull-up resistor
   attachInterrupt(digitalPinToInterrupt(pin_cad), updateCad, FALLING); // use pull-up resistor
 
+  // start protocols
   Serial.begin(9600);
   while(!Serial); // to be removed in final version
   if (!BLE.begin()){
@@ -70,12 +71,13 @@ void setup() {
     while(1);
   }
   
+  // set BLE parameters
   BLE.setLocalName("Zephyr");
   BLE.setDeviceName("Bicycle Computer");
-  
   BLE.setEventHandler(BLEConnected, bleConnectHandler);
   BLE.setEventHandler(BLEDisconnected, bleDisconnectHandler);
 
+  // add BLE characteristics & descriptors
   cscService.addCharacteristic(cscMeasurementChar);
   cscService.addCharacteristic(cscFeatureChar);
   battService.addCharacteristic(battChar);
@@ -89,6 +91,7 @@ void setup() {
   switchCharacteristicRear.setEventHandler(BLEWritten, switchedRear);
   switchCharacteristicEL.setEventHandler(BLEWritten, switchedEL);
 
+  // add BLE services
   BLE.addService(cscService);
   BLE.addService(battService);
   BLE.addService(lightSwitchService);
@@ -101,10 +104,11 @@ void setup() {
   cscData.sensor.cumCrankRev = 0;
   cscData.sensor.lastCrankEvent = 1;
   cscMeasurementChar.writeValue(cscData.blePacket, PACKET_SIZE);
-  switchCharacteristicFront.writeValue(LOW);
-  switchCharacteristicRear.writeValue(LOW);
-  switchCharacteristicEL.writeValue(LOW);
+  switchCharacteristicFront.writeValue(false);
+  switchCharacteristicRear.writeValue(false);
+  switchCharacteristicEL.writeValue(false);
     
+  // start advertising
   BLE.setAdvertisedService(cscService); // add the service UUID
   BLE.advertise();
 
@@ -112,7 +116,7 @@ void setup() {
 }
 
 void loop() {
-  BLEDevice central = BLE.central();
+  BLEDevice central = BLE.central(); // listen for BLE central to connect
   if (central){
     while(central.connected()){
       
@@ -129,6 +133,7 @@ void loop() {
   }
 }
 
+// called every updateDelay
 void updateBattery(){
   int currBattLevel = map(analogRead(pin_batt), 0, 1023, 0, 100);
   if (prevBattLevel != currBattLevel){
@@ -137,6 +142,7 @@ void updateBattery(){
   }
 }
 
+// called when interrupt on wheel event
 void updateSpeed(){
   t1 = millis();
   dt = t1-t0_w;
@@ -150,7 +156,7 @@ void updateSpeed(){
   }
 }
 
-  
+// called when interrupt on crank event
 void updateCad(){
   t1 = millis();
   dt = t1-t0_c;
@@ -164,16 +170,19 @@ void updateCad(){
   }
 }
 
+// called when disconnected from BLE central
 void bleDisconnectHandler(BLEDevice central){
   Serial.println("Disconnected.");
   digitalWrite(LED_BUILTIN, LOW);
 }
 
+// called when connected to BLE central
 void bleConnectHandler(BLEDevice central){
   Serial.println("Connected.");
   digitalWrite(LED_BUILTIN, HIGH);
 }
 
+// called when written to front light switch characteristic
 void switchedFront(BLEDevice central, BLECharacteristic characteristic){
   if (switchCharacteristicFront.value()) {
     Serial.println("Front light on");
@@ -183,6 +192,7 @@ void switchedFront(BLEDevice central, BLECharacteristic characteristic){
   } 
 }
 
+// called when written to rear light switch characteristic
 void switchedRear(BLEDevice central, BLECharacteristic characteristic){
   if (switchCharacteristicRear.value()) {
     Serial.println("Rear light on");
@@ -191,6 +201,7 @@ void switchedRear(BLEDevice central, BLECharacteristic characteristic){
   } 
 }
 
+// called when written to EL tape switch characteristic
 void switchedEL(BLEDevice central, BLECharacteristic characteristic){
   if (switchCharacteristicEL.value()) {
     Serial.println("EL tape on");

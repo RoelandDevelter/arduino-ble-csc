@@ -23,12 +23,10 @@ typedef union blePacket_t{
 };
 blePacket_t cscData; 
 
-
 // define battery parameters
 int prevBattLevel = 0;
 long previousMillis = 0; // counter for updating battery
 const int updateDelay = 1000; // in millis
-
 
 // define csc parameters
 unsigned int dt; // time difference between pulses in millis

@@ -3,11 +3,14 @@
 // define pin numbers
 const int pin_speed = 2;
 const int pin_cad = 3;
-const int pin_batt = A0;
+const int pin_batt = A1;
+const int pin_rear = 4;
+const int pin_EL = 5;
+const int pin_front = 6;
 
 #pragma pack(1)   // packs everything closer to each other (= get rid of padding), required for proper readout
 // define csc measurement packet
-typedef struct sensorData_t{
+typedef struct sensorData_t {
   byte flags;
   uint32_t cumWheelRev;
   uint16_t lastWheelEvent;
@@ -17,16 +20,16 @@ typedef struct sensorData_t{
 
 #define PACKET_SIZE sizeof(sensorData_t)
 
-typedef union blePacket_t{
+typedef union blePacket_t {
   sensorData_t sensor;
   byte blePacket[PACKET_SIZE];
 };
-blePacket_t cscData; 
+blePacket_t cscData;
 
 // define battery parameters
 int prevBattLevel = 0;
 long previousMillis = 0; // counter for updating battery
-const int updateDelay = 1000; // in millis
+const int updateDelay = 5000; // in millis
 
 // define csc parameters
 unsigned int dt; // time difference between pulses in millis
@@ -39,7 +42,7 @@ const int dt_min = 20; // minimal time between pulses to debounce sensor in mill
 boolean cscDataFlag = false; // flag to know when data needs to be pushed
 
 // define BLE parameters
-BLEService cscService("1816"); // UUID for cycling speed 
+BLEService cscService("1816"); // UUID for cycling speed
 BLECharacteristic cscMeasurementChar("2A5B", BLENotify, PACKET_SIZE); // characteristic of the computer
 BLEUnsignedShortCharacteristic cscFeatureChar("2A5C", BLERead);
 
@@ -59,18 +62,21 @@ void setup() {
   pinMode(pin_batt, INPUT);
   pinMode(pin_speed, INPUT_PULLUP);
   pinMode(pin_cad, INPUT_PULLUP);
+  pinMode(pin_rear, OUTPUT);
+  pinMode(pin_front, OUTPUT);
+  pinMode(pin_EL, OUTPUT);
   pinMode(LED_BUILTIN, OUTPUT);
   attachInterrupt(digitalPinToInterrupt(pin_speed), updateSpeed, FALLING); // use pull-up resistor
   attachInterrupt(digitalPinToInterrupt(pin_cad), updateCad, FALLING); // use pull-up resistor
 
   // start protocols
   Serial.begin(9600);
-  while(!Serial); // to be removed in final version
-  if (!BLE.begin()){
+  while (!Serial); // to be removed in final version
+  if (!BLE.begin()) {
     Serial.println("starting BLE failed");
-    while(1);
+    while (1);
   }
-  
+
   // set BLE parameters
   BLE.setLocalName("Zephyr");
   BLE.setDeviceName("Bicycle Computer");
@@ -95,9 +101,9 @@ void setup() {
   BLE.addService(cscService);
   BLE.addService(battService);
   BLE.addService(lightSwitchService);
-  
+
   // write initial values
-  cscFeatureChar.writeValue(1); // bit0: wheel rev data support, bit1: crank rev data support, bit2: multiple sensor locations 
+  cscFeatureChar.writeValue(1); // bit0: wheel rev data support, bit1: crank rev data support, bit2: multiple sensor locations
   cscData.sensor.flags = 3; // bit 0: wheel rev data present, bit 1: crank rev data present
   cscData.sensor.cumWheelRev = 0;
   cscData.sensor.lastWheelEvent = 1;
@@ -107,7 +113,7 @@ void setup() {
   switchCharacteristicFront.writeValue(false);
   switchCharacteristicRear.writeValue(false);
   switchCharacteristicEL.writeValue(false);
-    
+
   // start advertising
   BLE.setAdvertisedService(cscService); // add the service UUID
   BLE.advertise();
@@ -117,15 +123,15 @@ void setup() {
 
 void loop() {
   BLEDevice central = BLE.central(); // listen for BLE central to connect
-  if (central){
-    while(central.connected()){
-      
+  if (central) {
+    while (central.connected()) {
+
       long currentMillis = millis();
-      if (currentMillis - previousMillis >= updateDelay){
+      if (currentMillis - previousMillis >= updateDelay) {
         previousMillis = currentMillis;
         updateBattery();
       }
-      if (cscDataFlag){
+      if (cscDataFlag) {
         cscMeasurementChar.writeValue(cscData.blePacket, PACKET_SIZE);
         cscDataFlag = false;
       }
@@ -134,78 +140,83 @@ void loop() {
 }
 
 // called every updateDelay
-void updateBattery(){
+void updateBattery() {
   int currBattLevel = map(analogRead(pin_batt), 0, 1023, 0, 100);
-  if (prevBattLevel != currBattLevel){
+  if (prevBattLevel != currBattLevel) {
     prevBattLevel = currBattLevel;
     battChar.writeValue(currBattLevel);
   }
 }
 
 // called when interrupt on wheel event
-void updateSpeed(){
+void updateSpeed() {
   t1 = millis();
-  dt = t1-t0_w;
-  if (dt>dt_min){
-      t0_w = t1;
-      wheel_revs += 1;
-      
-      cscData.sensor.cumWheelRev = wheel_revs;
-      cscData.sensor.lastWheelEvent = dt;
-      cscDataFlag = true;   // don't write to characteristic in interrupt routine
+  dt = t1 - t0_w;
+  if (dt > dt_min) {
+    t0_w = t1;
+    wheel_revs += 1;
+
+    cscData.sensor.cumWheelRev = wheel_revs;
+    cscData.sensor.lastWheelEvent = dt;
+    cscDataFlag = true;   // don't write to characteristic in interrupt routine
   }
 }
 
 // called when interrupt on crank event
-void updateCad(){
+void updateCad() {
   t1 = millis();
-  dt = t1-t0_c;
-  if (dt>dt_min){
-      t0_c = t1;
-      crank_revs += 1;
-      
-      cscData.sensor.cumCrankRev = crank_revs;
-      cscData.sensor.lastCrankEvent = dt;
-      cscDataFlag = true;   // don't write to characteristic in interrupt routine
+  dt = t1 - t0_c;
+  if (dt > dt_min) {
+    t0_c = t1;
+    crank_revs += 1;
+
+    cscData.sensor.cumCrankRev = crank_revs;
+    cscData.sensor.lastCrankEvent = dt;
+    cscDataFlag = true;   // don't write to characteristic in interrupt routine
   }
 }
 
 // called when disconnected from BLE central
-void bleDisconnectHandler(BLEDevice central){
+void bleDisconnectHandler(BLEDevice central) {
   Serial.println("Disconnected.");
   digitalWrite(LED_BUILTIN, LOW);
 }
 
 // called when connected to BLE central
-void bleConnectHandler(BLEDevice central){
+void bleConnectHandler(BLEDevice central) {
   Serial.println("Connected.");
   digitalWrite(LED_BUILTIN, HIGH);
 }
 
 // called when written to front light switch characteristic
-void switchedFront(BLEDevice central, BLECharacteristic characteristic){
+void switchedFront(BLEDevice central, BLECharacteristic characteristic) {
   if (switchCharacteristicFront.value()) {
     Serial.println("Front light on");
-    //todo
-} else {
+    digitalWrite(pin_front, HIGH);
+  } else {
     Serial.println("Front light off");
-  } 
+    digitalWrite(pin_front, LOW);
+  }
 }
 
 // called when written to rear light switch characteristic
-void switchedRear(BLEDevice central, BLECharacteristic characteristic){
+void switchedRear(BLEDevice central, BLECharacteristic characteristic) {
   if (switchCharacteristicRear.value()) {
     Serial.println("Rear light on");
+    digitalWrite(pin_rear, HIGH);
   } else {
     Serial.println("Rear light off");
-  } 
+    digitalWrite(pin_rear, LOW);
+  }
 }
 
 // called when written to EL tape switch characteristic
-void switchedEL(BLEDevice central, BLECharacteristic characteristic){
+void switchedEL(BLEDevice central, BLECharacteristic characteristic) {
   if (switchCharacteristicEL.value()) {
     Serial.println("EL tape on");
+    digitalWrite(pin_EL, HIGH);
   } else {
     Serial.println("EL tape off");
-  } 
+    digitalWrite(pin_EL,LOW);
+  }
 }

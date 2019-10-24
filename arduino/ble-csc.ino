@@ -140,11 +140,13 @@ void loop() {
 }
 
 // called every updateDelay
+
+// called every updateDelay
 void updateBattery() {
-  int currBattLevel = map(analogRead(pin_batt), 0, 1023, 0, 100);
+  int currBattLevel = map(analogRead(pin_batt), 694, 972, 0, 10); // map 6V-8,4V to 0-10
   if (prevBattLevel != currBattLevel) {
     prevBattLevel = currBattLevel;
-    battChar.writeValue(currBattLevel);
+    battChar.writeValue(10*currBattLevel);
   }
 }
 

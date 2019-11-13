@@ -2,9 +2,8 @@
 ## to do
 * Lengthen debounce interval (values up to 100ms?)
 * Implement brake lights
-
-## Investigate
-* is there a way to disable WIFI in software?
+* blink lights upon connection & disconnection
+* program different rear light modes (flashing)
 
 ## Improvements
 * use IMU for alarm

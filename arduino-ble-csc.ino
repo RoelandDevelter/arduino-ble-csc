@@ -178,16 +178,31 @@ void updateCad() {
   }
 }
 
-// called when disconnected from BLE central
+// blink all lights, then turn them off
+void blink(){
+  digitalWrite(pin_rear, HIGH);
+  digitalWrite(pin_front, HIGH);
+  digitalWrite(pin_EL, HIGH);
+  delay(300);
+  digitalWrite(pin_rear, LOW);
+  digitalWrite(pin_front, LOW);
+  digitalWrite(pin_EL, LOW);
+}
+
+// called when disconnected from BLE central. Blink lights
 void bleDisconnectHandler(BLEDevice central) {
   Serial.println("Disconnected.");
   digitalWrite(LED_BUILTIN, LOW);
+  blink();
 }
 
-// called when connected to BLE central
+// called when connected to BLE central. Blink lights twice
 void bleConnectHandler(BLEDevice central) {
   Serial.println("Connected.");
   digitalWrite(LED_BUILTIN, HIGH);
+  blink();
+  delay(300);
+  blink();
 }
 
 // called when written to front light switch characteristic

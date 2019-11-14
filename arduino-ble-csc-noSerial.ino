@@ -29,7 +29,7 @@ blePacket_t cscData;
 // define battery parameters
 int prevBattLevel = 0;
 long previousMillis = 0; // counter for updating battery
-const int updateDelay = 5000; // in millis
+const int updateDelay = 60000; // in millis
 
 // define csc parameters
 unsigned int dt; // time difference between pulses in millis
@@ -38,7 +38,7 @@ unsigned long t0_c = 0; // time at previous crank pulse in millis
 unsigned long t1; // time at current pulse in millis
 unsigned long wheel_revs = 0; // total amount of revolutions, measure for total distance
 unsigned long crank_revs = 0; // total amount of revolutions, measure for total distance
-const int dt_min = 20; // minimal time between pulses to debounce sensor in millis
+const int dt_min = 100; // minimal time between pulses to debounce sensor in millis (100ms is 75km/h)
 boolean cscDataFlag = false; // flag to know when data needs to be pushed
 
 // define BLE parameters
@@ -136,8 +136,6 @@ void loop() {
 }
 
 // called every updateDelay
-
-// called every updateDelay
 void updateBattery() {
   int currBattLevel = map(analogRead(pin_batt), 694, 972, 0, 10); // map 6V-8,4V to 0-10
   if (prevBattLevel != currBattLevel) {
@@ -174,14 +172,29 @@ void updateCad() {
   }
 }
 
-// called when disconnected from BLE central
-void bleDisconnectHandler(BLEDevice central) {
-  digitalWrite(LED_BUILTIN, LOW);
+// blink all lights, then turn them off
+void blink(){
+  digitalWrite(pin_rear, HIGH);
+  digitalWrite(pin_front, HIGH);
+  digitalWrite(pin_EL, HIGH);
+  delay(300);
+  digitalWrite(pin_rear, LOW);
+  digitalWrite(pin_front, LOW);
+  digitalWrite(pin_EL, LOW);
 }
 
-// called when connected to BLE central
+// called when disconnected from BLE central. Blink lights
+void bleDisconnectHandler(BLEDevice central) {
+  digitalWrite(LED_BUILTIN, LOW);
+  blink();
+}
+
+// called when connected to BLE central. Blink lights twice
 void bleConnectHandler(BLEDevice central) {
   digitalWrite(LED_BUILTIN, HIGH);
+  blink();
+  delay(300);
+  blink();
 }
 
 // called when written to front light switch characteristic

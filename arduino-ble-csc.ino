@@ -38,7 +38,7 @@ unsigned long t0_c = 0; // time at previous crank pulse in millis
 unsigned long t1; // time at current pulse in millis
 unsigned long wheel_revs = 0; // total amount of revolutions, measure for total distance
 unsigned long crank_revs = 0; // total amount of revolutions, measure for total distance
-const int dt_min = 20; // minimal time between pulses to debounce sensor in millis
+const int dt_min = 100; // minimal time between pulses to debounce sensor in millis (100ms is 75km/h)
 boolean cscDataFlag = false; // flag to know when data needs to be pushed
 
 // define BLE parameters

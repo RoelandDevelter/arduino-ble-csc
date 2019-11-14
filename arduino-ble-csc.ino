@@ -140,8 +140,6 @@ void loop() {
 }
 
 // called every updateDelay
-
-// called every updateDelay
 void updateBattery() {
   int currBattLevel = map(analogRead(pin_batt), 694, 972, 0, 10); // map 6V-8,4V to 0-10
   if (prevBattLevel != currBattLevel) {

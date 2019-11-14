@@ -29,7 +29,7 @@ blePacket_t cscData;
 // define battery parameters
 int prevBattLevel = 0;
 long previousMillis = 0; // counter for updating battery
-const int updateDelay = 5000; // in millis
+const int updateDelay = 60000; // in millis
 
 // define csc parameters
 unsigned int dt; // time difference between pulses in millis
